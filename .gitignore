@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # This file is used to ignore files which are generated
 # ----------------------------------------------------------------------------
 
@@ -136,4 +135,3 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
->>>>>>> origin/master
