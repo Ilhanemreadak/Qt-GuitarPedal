@@ -142,7 +142,7 @@ Window {
         x: parent.width * 0.33 - width / 2
         y: 14
         sourceBaseName: "LED"
-        checked: footPedal.checked
+        checked: pedalController.effectActive
 
         DeviceText{
             text: qsTr("CHECKED")
