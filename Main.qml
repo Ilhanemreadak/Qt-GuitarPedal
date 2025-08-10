@@ -158,6 +158,10 @@ Window {
         sourceBaseName: "Switch"
         topMargin : 16
 
+        onCheckedChanged: {
+            pedalController.changeMode(checked)
+        }
+
         DeviceText{
             text: qsTr("MODE")
             anchors.top: parent.bottom
@@ -173,6 +177,10 @@ Window {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottomMargin: 17
         checked: false
+
+        onCheckedChanged: {
+            pedalController.toggleEffect(checked)
+        }
     }
 
     component DeviceDial: Image {
@@ -210,8 +218,6 @@ Window {
 
                 dial.angle = Math.max(startAngle, Math.min(newAngle,endAngle))
                 dial.value = (dial.angle - startAngle) / (endAngle - startAngle) * dial.range
-
-                console.log("angle: ", dial.angle, "value: ", dial.value)
             }
         }
 
@@ -246,17 +252,29 @@ Window {
         anchors.left: footPedal.left
         y: 147 - height / 2
         text: qsTr("TIME")
+
+        onValueChanged: {
+            pedalController.setTime(value)
+        }
     }
 
     DeviceDial {
         anchors.right: footPedal.right
         y: 147 - height / 2
         text: qsTr("FEEDBACK")
+
+        onValueChanged: {
+            pedalController.setFeedback(value)
+        }
     }
 
     DeviceDial {
         anchors.horizontalCenter: parent.horizontalCenter
         y: 67 - height / 2
         text: qsTr("LEVEL")
+
+        onValueChanged: {
+            pedalController.setLevel(value)
+        }
     }
 }

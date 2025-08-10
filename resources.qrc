@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Main.qml</file>
+        <file>assets/Guitar-Pedal-Background.png</file>
+        <file>assets/Screw.png</file>
+        <file>fonts/RussoOne-Regular.ttf</file>
+        <file>fonts/Prisma.ttf</file>
+    </qresource>
+</RCC>
