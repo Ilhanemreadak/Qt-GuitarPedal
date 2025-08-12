@@ -9,6 +9,10 @@ class PedalController : public QObject
     Q_OBJECT
 
     Q_PROPERTY(bool effectActive READ effectActive NOTIFY effectActiveChanged FINAL)
+    Q_PROPERTY(int time READ time WRITE setTime NOTIFY timeChanged FINAL)
+    Q_PROPERTY(int feedback READ feedback WRITE setFeedback NOTIFY feedbackChanged FINAL)
+    Q_PROPERTY(int level READ level WRITE setLevel NOTIFY levelChanged FINAL)
+
 public:
     explicit PedalController(QObject *parent = nullptr) : QObject(parent){}
 
@@ -26,26 +30,47 @@ public:
     }
 
     Q_INVOKABLE void setTime(int value) {
+        if(m_time == value) return;
+        m_time = value;
+        emit timeChanged();
+
         qDebug() << "Time değeri:" << value;
     }
 
     Q_INVOKABLE void setFeedback(int value) {
+        if(m_feedback == value) return;
+        m_feedback = value;
+        emit feedbackChanged();
+
         qDebug() << "Feedback değeri:" << value;
     }
 
     Q_INVOKABLE void setLevel(int value) {
+        if(m_level == value) return;
+        m_level = value;
+        emit levelChanged();
+
         qDebug() << "Level değeri:" << value;
     }
 
     // QML'in okuyacağı getter
+
     bool effectActive() const { return m_effectActive; }
     QString modeName() const {return m_modeName; }
-
+    int time() const {return m_time;}
+    int feedback() const {return m_feedback; }
+    int level() const {return m_level; }
 signals:
     void effectActiveChanged();
     void modeNameChanged();
+    void timeChanged();
+    void feedbackChanged();
+    void levelChanged();
 
 private:
+    int m_time = 0;
+    int m_feedback = 0;
+    int m_level = 0;
     bool m_effectActive = false;               // LED’in bağlı olacağı durum
     QString m_modeName = "Chorus";
 };
