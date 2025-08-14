@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QDebug>
+#include <AudioEngine.h>
 
 class PedalController : public QObject
 {
@@ -20,7 +21,17 @@ public:
         if(m_effectActive == on) return;
         m_effectActive = on;
         emit effectActiveChanged();
-        qDebug() << "Efekt" << (on ? "Efekt açıldı" : "Efekt kapandı");
+
+        if (on) {
+            if (m_audio.start()) {
+                qDebug() << "Efekt açıldı, AudioEngine başlatıldı";
+            } else {
+                qDebug() << "Efekt açıldı ama AudioEngine başlatılamadı!";
+            }
+        } else {
+            m_audio.stop();
+            qDebug() << "Efekt kapandı, AudioEngine durdu";
+        }
     }
 
     Q_INVOKABLE void changeMode(bool active) {
@@ -50,7 +61,13 @@ public:
         m_level = value;
         emit levelChanged();
 
-        qDebug() << "Level değeri:" << value;
+        float g = m_level / 50.0f;
+
+        if(g < 0.0f) g=0.0f;
+
+        m_audio.setGain(g);
+
+        qDebug() << "Level:" << m_level << "Gain:" << g;
     }
 
     // QML'in okuyacağı getter
@@ -73,6 +90,8 @@ private:
     int m_level = 0;
     bool m_effectActive = false;               // LED’in bağlı olacağı durum
     QString m_modeName = "Chorus";
+
+    AudioEngine m_audio;
 };
 
 #endif // PEDALCONTROLLER_H
