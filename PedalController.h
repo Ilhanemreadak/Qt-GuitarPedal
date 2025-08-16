@@ -45,6 +45,8 @@ public:
         m_time = value;
         emit timeChanged();
 
+        // AudioEngine delay ayarı
+        m_audio.setDelay(m_time, m_feedback / 100.0f);
         qDebug() << "Time değeri:" << value;
     }
 
@@ -53,6 +55,8 @@ public:
         m_feedback = value;
         emit feedbackChanged();
 
+        // AudioEngine delay ayarı
+        m_audio.setDelay(m_time, m_feedback / 100.0f);
         qDebug() << "Feedback değeri:" << value;
     }
 

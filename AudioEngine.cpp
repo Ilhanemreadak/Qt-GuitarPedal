@@ -68,13 +68,17 @@ void AudioEngine::stop(){
 }
 
 /**
- * @brief Girişten gelen ses verisini işleyip çıkışa yazar.
+ * @brief Girişten gelen ses verisini gain ve delay efektleriyle işleyip çıkışa yazar.
  *
  * readyRead() sinyali ile tetiklenir:
  * 1. Tüm ses verisi m_buffer'a okunur.
- * 2. Format 16-bit PCM ise her örnek m_gain ile çarpılır.
+ * 2. Format 16-bit PCM ise:
+ *    - Delay etkinse, gecikmiş örnekler mevcut örneğe eklenir ve feedback uygulanır.
+ *    - Gain değeri uygulanır.
  * 3. Taşma durumunda örnekler sınırlandırılır.
  * 4. İşlenen veri çıkış cihazına yazılır.
+ *
+ * @note Delay süresi ve feedback değeri setDelay() ile ayarlanır.
  */
 void AudioEngine::onReadyRead(){
     if(!m_input || !m_output)
@@ -82,22 +86,45 @@ void AudioEngine::onReadyRead(){
 
     m_buffer = m_input->readAll();
 
-    if(!m_buffer.isEmpty() && m_format.sampleFormat() == QAudioFormat::Int16){
+    if (!m_buffer.isEmpty() && m_format.sampleFormat() == QAudioFormat::Int16) {
         qint16* samples = reinterpret_cast<qint16*>(m_buffer.data());
         int sampleCount = m_buffer.size() / sizeof(qint16);
 
-        if(m_gain != 1.0f){
-            for(int i = 0; i < sampleCount; ++i){
-                float s = samples[i] * m_gain;
-                if(s >  32767.0f) s =  32767.0f;
-                if(s < -32768.0f) s = -32768.0f;
+        if (m_delaySamples > 0) {
+            qint16* delayData = reinterpret_cast<qint16*>(m_delayBuffer.data());
 
+            for (int i = 0; i < sampleCount; ++i) {
+                float inSample = samples[i];
+                float delayedSample = delayData[m_delayPos];
+
+                float outSample = inSample + delayedSample;
+
+                delayData[m_delayPos] = static_cast<qint16>(inSample + delayedSample * m_feedback);
+
+                outSample *= m_gain;
+
+                if (outSample >  32767.0f) outSample =  32767.0f;
+                if (outSample < -32768.0f) outSample = -32768.0f;
+
+                samples[i] = static_cast<qint16>(outSample);
+
+                m_delayPos++;
+                if (m_delayPos >= m_delaySamples) m_delayPos = 0;
+            }
+        } else {
+            // Delay yoksa sadece gain uygula
+            for (int i = 0; i < sampleCount; ++i) {
+                float s = samples[i] * m_gain;
+                if (s >  32767.0f) s =  32767.0f;
+                if (s < -32768.0f) s = -32768.0f;
                 samples[i] = static_cast<qint16>(s);
             }
         }
     }
 
-    if(!m_buffer.isEmpty()){
+    // Çıkışa yaz
+    if(!m_buffer.isEmpty()) {
         m_output->write(m_buffer);
     }
+
 }
