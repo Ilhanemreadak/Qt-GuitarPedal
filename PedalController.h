@@ -37,8 +37,16 @@ public:
     Q_INVOKABLE void changeMode(bool active) {
         m_modeName = active ? "Delay" : "Chorus";
         emit modeNameChanged();
+
+        if (active) {
+            m_audio.enableDelay(m_time, m_feedback / 100.0f);
+        } else {
+            m_audio.enableChorus();
+        }
+
         qDebug() << "Mode değişti: " << m_modeName;
     }
+
 
     Q_INVOKABLE void setTime(int value) {
         if(m_time == value) return;

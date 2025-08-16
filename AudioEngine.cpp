@@ -80,47 +80,45 @@ void AudioEngine::stop(){
  *
  * @note Delay süresi ve feedback değeri setDelay() ile ayarlanır.
  */
+
 void AudioEngine::onReadyRead(){
     if(!m_input || !m_output)
         return;
 
     m_buffer = m_input->readAll();
 
-    if (!m_buffer.isEmpty() && m_format.sampleFormat() == QAudioFormat::Int16) {
+    if(!m_buffer.isEmpty() && m_format.sampleFormat() == QAudioFormat::Int16){
         qint16* samples = reinterpret_cast<qint16*>(m_buffer.data());
         int sampleCount = m_buffer.size() / sizeof(qint16);
+        qint16* delayData = reinterpret_cast<qint16*>(m_delayBuffer.data());
 
-        if (m_delaySamples > 0) {
-            qint16* delayData = reinterpret_cast<qint16*>(m_delayBuffer.data());
+        for(int i = 0; i < sampleCount; ++i){
+            float inSample = samples[i];
+            float delayedSample = delayData[m_delayPos];
 
-            for (int i = 0; i < sampleCount; ++i) {
-                float inSample = samples[i];
-                float delayedSample = delayData[m_delayPos];
-
-                float outSample = inSample + delayedSample;
-
+            if (m_effectType == 1) {
+                // Delay
                 delayData[m_delayPos] = static_cast<qint16>(inSample + delayedSample * m_feedback);
-
-                outSample *= m_gain;
-
-                if (outSample >  32767.0f) outSample =  32767.0f;
-                if (outSample < -32768.0f) outSample = -32768.0f;
-
-                samples[i] = static_cast<qint16>(outSample);
-
-                m_delayPos++;
-                if (m_delayPos >= m_delaySamples) m_delayPos = 0;
             }
-        } else {
-            // Delay yoksa sadece gain uygula
-            for (int i = 0; i < sampleCount; ++i) {
-                float s = samples[i] * m_gain;
-                if (s >  32767.0f) s =  32767.0f;
-                if (s < -32768.0f) s = -32768.0f;
-                samples[i] = static_cast<qint16>(s);
+            else if (m_effectType == 2) {
+                // Chorus → modülasyon ekleme
+                float lfo = sinf(2.0f * M_PI * (m_delayPos % m_delaySamples) / m_delaySamples) * 0.5f;
+                delayData[m_delayPos] = static_cast<qint16>((inSample + delayedSample) * (1.0f + lfo));
             }
+
+            float outSample = inSample + delayedSample;
+            outSample *= m_gain;
+
+            if(outSample >  32767.0f) outSample =  32767.0f;
+            if(outSample < -32768.0f) outSample = -32768.0f;
+
+            samples[i] = static_cast<qint16>(outSample);
+
+            m_delayPos++;
+            if(m_delayPos >= m_delaySamples) m_delayPos = 0;
         }
     }
+
 
     // Çıkışa yaz
     if(!m_buffer.isEmpty()) {

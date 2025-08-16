@@ -32,6 +32,18 @@ public:
         m_delayPos = 0;
     }
 
+    void enableDelay(int ms, float feedback) {
+        setDelay(ms, feedback);
+        m_effectType = 1; // Delay
+    }
+
+    void enableChorus() {
+        // Chorus: kısa delay + modülasyon
+        setDelay(25, 0.4f);
+        m_effectType = 2; // Chorus
+    }
+
+
 private slots:
     void onReadyRead();
 
@@ -42,6 +54,8 @@ private:
 
     QIODevice* m_input = nullptr;
     QIODevice* m_output = nullptr;
+
+    int m_effectType = 0;
 
     float  m_gain = 1.0f;
     QByteArray m_buffer;
