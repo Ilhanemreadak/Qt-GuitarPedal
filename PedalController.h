@@ -4,18 +4,60 @@
 #include <QObject>
 #include <QDebug>
 #include <AudioEngine.h>
+#include <QMediaDevices>
+#include <QAudioDevice>
+#include <QStringList>
 
 class PedalController : public QObject
 {
     Q_OBJECT
 
+    Q_PROPERTY(QStringList inputDevices READ inputDevices NOTIFY devicesChanged FINAL)
+    Q_PROPERTY(QStringList outputDevices READ outputDevices NOTIFY devicesChanged  FINAL)
+
     Q_PROPERTY(bool effectActive READ effectActive NOTIFY effectActiveChanged FINAL)
+
     Q_PROPERTY(int time READ time WRITE setTime NOTIFY timeChanged FINAL)
     Q_PROPERTY(int feedback READ feedback WRITE setFeedback NOTIFY feedbackChanged FINAL)
     Q_PROPERTY(int level READ level WRITE setLevel NOTIFY levelChanged FINAL)
 
+
+
 public:
     explicit PedalController(QObject *parent = nullptr) : QObject(parent){}
+
+    QStringList inputDevices() const {
+        QStringList list;
+        const auto inputs = QMediaDevices::audioInputs();
+        for (const auto &d : inputs) list << d.description();
+
+        return list;
+    }
+
+    QStringList outputDevices() const {
+        QStringList list;
+        const auto outputs = QMediaDevices::audioOutputs();
+        for (const auto &d : outputs) list << d.description();
+
+        return list;
+    }
+
+    Q_INVOKABLE void setInputDevice(int index){
+        const auto inputs = QMediaDevices::audioInputs();
+
+        if(index >= 0 && index < inputs.size()){
+            m_audio.setInputDevice(inputs[index]);
+            qDebug() << "Giriş cihazı değişti:" << inputs[index].description();
+        }
+    }
+
+    Q_INVOKABLE void setOutputDevice(int index) {
+        const auto outputs = QMediaDevices::audioOutputs();
+        if (index >= 0 && index < outputs.size()) {
+            m_audio.setOutputDevice(outputs[index]);
+            qDebug() << "Çıkış cihazı değişti:" << outputs[index].description();
+        }
+    }
 
     Q_INVOKABLE void toggleEffect(bool on) {
         if(m_effectActive == on) return;
@@ -90,6 +132,7 @@ public:
     int feedback() const {return m_feedback; }
     int level() const {return m_level; }
 signals:
+    void devicesChanged();
     void effectActiveChanged();
     void modeNameChanged();
     void timeChanged();

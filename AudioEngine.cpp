@@ -28,8 +28,10 @@ bool AudioEngine::start()
     if(isRunning())
         return true;
 
-    const QAudioDevice inDev = QMediaDevices::defaultAudioInput();
-    const QAudioDevice outDev = QMediaDevices::defaultAudioOutput();
+    const QAudioDevice inDev = m_selectedInput.isNull() ? QMediaDevices::defaultAudioInput() : m_selectedInput;
+    const QAudioDevice outDev = m_selectedOutput.isNull() ? QMediaDevices::defaultAudioOutput() : m_selectedOutput;
+
+    m_format = inDev.preferredFormat();
 
     m_source.reset(new QAudioSource(inDev, m_format, this));
     m_sink.reset(new QAudioSink(outDev, m_format, this));
@@ -125,4 +127,14 @@ void AudioEngine::onReadyRead(){
         m_output->write(m_buffer);
     }
 
+}
+
+void AudioEngine::setInputDevice(const QAudioDevice& dev){
+    m_selectedInput = dev;
+    if(isRunning()) { stop(); start();}
+}
+
+void AudioEngine::setOutputDevice(const QAudioDevice& dev) {
+    m_selectedOutput = dev;
+    if (isRunning()) { stop(); start(); }
 }

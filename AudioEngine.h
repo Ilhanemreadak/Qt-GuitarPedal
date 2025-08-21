@@ -9,6 +9,7 @@
 #include <QIODevice>
 #include <QByteArray>
 #include <QScopedPointer>
+#include <QAudioDevice>
 
 class AudioEngine : public QObject
 {
@@ -43,11 +44,17 @@ public:
         m_effectType = 2; // Chorus
     }
 
+    void setInputDevice(const QAudioDevice& dev);
+    void setOutputDevice(const QAudioDevice& dev);
 
 private slots:
     void onReadyRead();
 
 private:
+
+    QAudioDevice m_selectedInput;
+    QAudioDevice m_selectedOutput;
+
     QAudioFormat m_format;
     QScopedPointer<QAudioSource> m_source;
     QScopedPointer<QAudioSink> m_sink;
